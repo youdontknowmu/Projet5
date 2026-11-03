@@ -7,7 +7,17 @@ authors = [
     { name = "youdontknowmu", email = "youdontknowmu@gmail.com" }
 ]
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "fastapi>=0.162.0",
+    "joblib>=1.6.0",
+    "pandas>=3.1.0",
+    "psycopg[binary]>=3.3.7",
+    "python-dotenv>=1.2.4",
+    "scikit-learn==1.9.1",
+    "sqlalchemy>=2.1.6",
+    "uvicorn>=0.54.0",
+    "xgboost==3.4.1",
+]
 
 [project.scripts]
 projet5 = "projet5:main"
@@ -15,3 +25,10 @@ projet5 = "projet5:main"
 [build-system]
 requires = ["uv_build>=0.12.9,<0.13.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.2.0",
+    "pytest-cov>=7.1.0",
+]
