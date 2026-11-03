@@ -9,7 +9,20 @@ L'API reçoit l'identifiant d'un employé, récupère ses données dans une base
 et renvoie la prédiction « partant » ou « restant », avec la probabilité de départ.
 
 ## Architecture
-*À compléter*
+
+```
+Projet5/
+├── .github/workflows/   # Pipelines CI/CD (GitHub Actions)
+├── data/                # Dataset du projet 4, prêt pour le modèle
+├── docs/                # Documentation (schéma de la base de données…)
+├── models/              # Modèle entraîné (.joblib)
+├── scripts/             # Scripts utilitaires (création et alimentation de la base)
+├── src/projet5/         # Code source de l'API
+├── tests/               # Tests unitaires et fonctionnels (Pytest)
+├── .env.example         # Modèle du fichier de configuration (secrets)
+├── pyproject.toml       # Dépendances et configuration du projet (uv)
+└── README.md
+```
 
 ## Prérequis
 *À compléter*
