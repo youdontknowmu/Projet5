@@ -25,10 +25,28 @@ Projet5/
 ```
 
 ## Prérequis
-*À compléter*
+- Python 3.14
+- [uv](https://docs.astral.sh/uv/) (gestionnaire de dépendances)
+- PostgreSQL
 
 ## Installation
-*À compléter*
+1. Cloner le dépôt :
+   ```bash
+   git clone https://github.com/youdontknowmu/Projet5.git
+   cd Projet5
+   ```
+2. Installer les dépendances (crée l'environnement virtuel `.venv`) :
+   ```bash
+   uv sync
+   ```
+   Sans uv : `pip install -r requirements.txt`
+3. Créer le fichier de configuration à partir du modèle, puis renseigner les valeurs :
+   ```bash
+   cp .env.example .env
+   ```
+
+> Le fichier `requirements.txt` est généré depuis `uv.lock`. Après toute modification des dépendances, le régénérer avec :
+> `uv export --format requirements-txt --no-hashes --no-emit-project -o requirements.txt`
 
 ## Base de données
 *À compléter*
