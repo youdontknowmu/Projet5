@@ -9,13 +9,44 @@ L'API reçoit l'identifiant d'un employé, récupère ses données dans une base
 et renvoie la prédiction « partant » ou « restant », avec la probabilité de départ.
 
 ## Architecture
-*À compléter*
+
+```
+Projet5/
+├── .github/workflows/   # Pipelines CI/CD (GitHub Actions)
+├── data/                # Dataset du projet 4, prêt pour le modèle
+├── docs/                # Documentation (schéma de la base de données…)
+├── models/              # Modèle entraîné (.joblib)
+├── scripts/             # Scripts utilitaires (création et alimentation de la base)
+├── src/projet5/         # Code source de l'API
+├── tests/               # Tests unitaires et fonctionnels (Pytest)
+├── .env.example         # Modèle du fichier de configuration (secrets)
+├── pyproject.toml       # Dépendances et configuration du projet (uv)
+└── README.md
+```
 
 ## Prérequis
-*À compléter*
+- Python 3.14
+- [uv](https://docs.astral.sh/uv/) (gestionnaire de dépendances)
+- PostgreSQL
 
 ## Installation
-*À compléter*
+1. Cloner le dépôt :
+   ```bash
+   git clone https://github.com/youdontknowmu/Projet5.git
+   cd Projet5
+   ```
+2. Installer les dépendances (crée l'environnement virtuel `.venv`) :
+   ```bash
+   uv sync
+   ```
+   Sans uv : `pip install -r requirements.txt`
+3. Créer le fichier de configuration à partir du modèle, puis renseigner les valeurs :
+   ```bash
+   cp .env.example .env
+   ```
+
+> Le fichier `requirements.txt` est généré depuis `uv.lock`. Après toute modification des dépendances, le régénérer avec :
+> `uv export --format requirements-txt --no-hashes --no-emit-project -o requirements.txt`
 
 ## Base de données
 *À compléter*
@@ -33,6 +64,33 @@ et renvoie la prédiction « partant » ou « restant », avec la probabilité d
 *À compléter*
 
 ## CI/CD et gestion des versions
+
+### Organisation des branches (Gitflow léger)
+| Branche | Rôle | Règle |
+|---|---|---|
+| `main` | Production | Ne reçoit que des fusions depuis `develop`, par pull request. Chaque fusion donne lieu à un tag de version. |
+| `develop` | Intégration (développement) | Rassemble les fonctionnalités terminées, par pull request. |
+| `feature/<nom-court>` | Une fonctionnalité | Créée depuis `develop`, puis fusionnée dans `develop` par pull request. |
+
+Exemples de noms de branches : `feature/api`, `feature/base-de-donnees`, `feature/tests`.
+
+### Convention des messages de commit
+Format `type: description` ([Conventional Commits](https://www.conventionalcommits.org/fr/)) :
+
+| Type | Usage |
+|---|---|
+| `feat` | Nouvelle fonctionnalité |
+| `fix` | Correction de bug |
+| `docs` | Documentation (README…) |
+| `test` | Ajout ou modification de tests |
+| `ci` | Pipeline CI/CD (GitHub Actions) |
+| `chore` | Organisation, configuration, dépendances |
+| `refactor` | Réorganisation du code sans changement de comportement |
+
+### Versions
+Les versions suivent le format `vMAJEUR.MINEUR.CORRECTIF` (ex. `v0.1.0`). Un tag est posé sur `main` à chaque mise en production.
+
+### Pipeline CI/CD
 *À compléter*
 
 ## Besoins analytiques
