@@ -8,7 +8,7 @@ from projet5.prediction import SEUIL_DECISION, interpreter_probabilite
 # "assert" vérifie qu'une condition est vraie : sinon, le test échoue.
 
 def test_probabilite_elevee_donne_partant():
-    assert interpreter_probabilite(0.80) == "partant"
+    assert interpreter_probabilite(0.80) == "restant"   # FAUX VOLONTAIREMENT : démonstration CI
 
 
 def test_probabilite_faible_donne_restant():
