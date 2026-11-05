@@ -91,7 +91,12 @@ Format `type: description` ([Conventional Commits](https://www.conventionalcommi
 Les versions suivent le format `vMAJEUR.MINEUR.CORRECTIF` (ex. `v0.1.0`). Un tag est posé sur `main` à chaque mise en production.
 
 ### Pipeline CI/CD
-*À compléter*
+
+![CI - Tests](https://github.com/youdontknowmu/Projet5/actions/workflows/ci.yml/badge.svg?branch=develop)
+
+**Intégration continue** (`.github/workflows/ci.yml`) : à chaque pull request et à chaque fusion
+sur `develop` ou `main`, GitHub Actions installe le projet sur une machine neuve et lance les tests
+Pytest avec un rapport de couverture.
 
 ## Besoins analytiques
 *À compléter*
