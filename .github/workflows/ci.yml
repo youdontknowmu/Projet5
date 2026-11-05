@@ -1,0 +1,40 @@
+# ------------------------------------------------------------
+# CI (intégration continue) : vérifie que le code est sain
+# ------------------------------------------------------------
+name: CI - Tests
+
+# QUAND le workflow se déclenche
+on:
+  # À chaque pull request vers develop ou main : les tests doivent passer avant de fusionner
+  pull_request:
+    branches: [develop, main]
+  # Après chaque fusion sur develop ou main : on vérifie aussi le résultat de la fusion
+  push:
+    branches: [develop, main]
+  # Bouton "Run workflow" dans l'onglet Actions, pour le lancer à la main
+  workflow_dispatch:
+
+# CE QUE fait le workflow
+jobs:
+  tests:
+    name: Tests Pytest            # nom affiché sur GitHub (il resservira à l'étape 2.3)
+    runs-on: ubuntu-latest        # machine Linux fournie gratuitement par GitHub
+
+    steps:
+      # 1) Récupère le code du dépôt sur la machine
+      - name: Récupération du code
+        uses: actions/checkout@v5
+
+      # 2) Installe uv (il lit .python-version et installe Python 3.14 tout seul)
+      - name: Installation de uv
+        uses: astral-sh/setup-uv@v10.3.2
+        with:
+          enable-cache: true      # garde les librairies en cache : les exécutions suivantes sont plus rapides
+
+      # 3) Installe les dépendances EXACTES du uv.lock (--frozen : interdit toute modification du lock)
+      - name: Installation des dépendances
+        run: uv sync --frozen
+
+      # 4) Lance les tests, avec le rapport de couverture
+      - name: Lancement des tests
+        run: uv run pytest -v --cov=projet5 --cov-report=term-missing
