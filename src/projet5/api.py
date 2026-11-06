@@ -1,11 +1,12 @@
 """API de prédiction du risque de démission (POC Futurisys)."""
 from importlib.metadata import version
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 
 from projet5.modele import calculer_probabilite, charger_donnees, charger_modele
 from projet5.prediction import SEUIL_DECISION, interpreter_probabilite
 from projet5.schemas import Prediction, Sante
+from projet5.securite import verifier_cle_api
 
 # Création de l'application.
 # Le titre, la description et la version s'affichent dans la documentation Swagger (/docs).
@@ -33,7 +34,14 @@ def verifier_sante() -> Sante:
 # {id_employee} : partie variable de l'adresse. Exemple : /predict/1273
 # Le type "int" dans la fonction fait vérifier par FastAPI que c'est bien un nombre entier
 # (sinon il répond automatiquement une erreur 422).
-@app.get("/predict/{id_employee}", response_model=Prediction, tags=["Prédiction"])
+# dependencies : avant d'exécuter la fonction, FastAPI appelle verifier_cle_api.
+# Si la clé est absente ou fausse, la requête s'arrête là (erreur 401).
+@app.get(
+    "/predict/{id_employee}",
+    response_model=Prediction,
+    tags=["Prédiction"],
+    dependencies=[Depends(verifier_cle_api)],
+)
 def predire(id_employee: int) -> Prediction:
     """Prédit si l'employé risque de quitter l'entreprise."""
     try:
