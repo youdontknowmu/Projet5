@@ -1,0 +1,74 @@
+# ------------------------------------------------------------
+# CD (déploiement continu) : met en production ce qui arrive sur main
+# ------------------------------------------------------------
+name: CD - Déploiement
+
+on:
+  # Uniquement quand du code arrive sur main (fusion d'une release depuis develop)
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  # 1) On relance les tests en appelant le workflow ci.yml
+  tests:
+    name: Tests avant déploiement
+    uses: ./.github/workflows/ci.yml
+
+  # 2) Déploiement, UNIQUEMENT si les tests sont verts (needs)
+  deploiement:
+    name: Déploiement production
+    needs: tests
+    runs-on: ubuntu-latest
+    environment: production       # donne accès aux secrets de production + validation manuelle
+    permissions:
+      contents: write             # autorise le workflow à créer une release
+
+    steps:
+      - name: Récupération du code
+        uses: actions/checkout@v5
+
+      - name: Installation de uv
+        uses: astral-sh/setup-uv@v10.3.2
+
+      # Le secret est lu depuis l'environnement production, jamais écrit dans le code.
+      # Il servira à l'étape 3 pour tester l'API déployée.
+      - name: Vérification du secret de production
+        env:
+          API_KEY: ${{ secrets.API_KEY }}
+        run: |
+          if [ -z "$API_KEY" ]; then
+            echo "ERREUR : le secret API_KEY n'est pas défini dans l'environnement production"
+            exit 1
+          fi
+          echo "Secret API_KEY présent (GitHub masque sa valeur dans les journaux)"
+
+      # Lit le numéro de version dans pyproject.toml (ex. 0.2.0)
+      - name: Lecture du numéro de version
+        id: version
+        run: echo "numero=$(uv version --short)" >> "$GITHUB_OUTPUT"
+
+      # Sécurité : on refuse de déployer deux fois la même version
+      - name: Contrôle que la version est nouvelle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "v${{ steps.version.outputs.numero }}" > /dev/null 2>&1; then
+            echo "ERREUR : la version v${{ steps.version.outputs.numero }} existe déjà."
+            echo "Incrémenter la version avant la mise en prod : uv version --bump minor"
+            exit 1
+          fi
+
+      # Construit le paquet installable de l'API (dossier dist/)
+      - name: Construction du paquet
+        run: uv build
+
+      # Crée le tag et la release, avec le paquet en pièce jointe
+      - name: Publication de la release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v${{ steps.version.outputs.numero }}" dist/* \
+            --target "${{ github.sha }}" \
+            --title "v${{ steps.version.outputs.numero }}" \
+            --generate-notes
