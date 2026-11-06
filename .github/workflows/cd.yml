@@ -58,7 +58,38 @@ jobs:
             echo "Incrémenter la version avant la mise en prod : uv version --bump minor"
             exit 1
           fi
+          
+      # Installe l'API et ses dépendances sur la machine de GitHub
+      - name: Installation des dépendances
+        run: uv sync --frozen
 
+      # Test de fumée : on démarre VRAIMENT l'API et on l'interroge, avec la clé de production
+      - name: Test de fumée de l'API
+        env:
+          API_KEY: ${{ secrets.API_KEY }}
+        run: |
+          # Démarre l'API en arrière-plan (le & final) pour pouvoir l'interroger ensuite
+          uv run uvicorn projet5.api:app --port 8000 &
+
+          # Attend qu'elle soit prête (30 secondes maximum)
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:8000/health > /dev/null && break
+            sleep 1
+          done
+
+          # curl -f : la commande échoue si l'API répond une erreur, ce qui fait échouer le workflow
+          echo "1) L'API répond :"
+          curl -sf http://127.0.0.1:8000/health
+          echo ""
+
+          echo "2) Une prédiction fonctionne avec la clé de production :"
+          curl -sf -H "X-API-Key: $API_KEY" http://127.0.0.1:8000/predict/1273
+          echo ""
+
+          echo "3) Une requête sans clé est refusée (401 attendu) :"
+          code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/predict/1273)
+          echo "Code reçu : $code"
+          test "$code" = "401"
       # Construit le paquet installable de l'API (dossier dist/)
       - name: Construction du paquet
         run: uv build

@@ -52,13 +52,63 @@ Projet5/
 *À compléter*
 
 ## Lancement de l'API
-*À compléter*
+
+```bash
+uv run uvicorn projet5.api:app --reload
+```
+
+- API : http://127.0.0.1:8000
+- Documentation interactive (Swagger) : http://127.0.0.1:8000/docs
+- Vérification de l'état de l'API : http://127.0.0.1:8000/health
 
 ## Utilisation
-*À compléter*
+
+Prédiction pour un employé, à partir de son identifiant :
+
+```bash
+curl.exe -H "X-API-Key: <votre_clé>" http://127.0.0.1:8000/predict/1273
+```
+
+Réponse :
+```json
+{
+  "id_employee": 1273,
+  "prediction": "partant",
+  "probabilite_depart": 0.98,
+  "seuil_decision": 0.16
+}
+```
+
+| Code HTTP | Signification |
+|---|---|
+| 200 | Prédiction effectuée |
+| 401 | Clé API absente ou invalide |
+| 404 | Identifiant d'employé inconnu |
+| 422 | Identifiant invalide (pas un nombre entier) |
 
 ## Authentification et sécurité
-*À compléter*
+
+**Authentification par clé API** : les routes de prédiction exigent l'en-tête HTTP `X-API-Key`.
+Sans clé, ou avec une clé invalide, l'API répond `401`. La route `/health` reste publique (supervision).
+Dans Swagger (`/docs`), le bouton **Authorize** permet de saisir la clé.
+
+**Gestion des secrets** :
+- La clé n'est jamais écrite dans le code : elle est lue dans la variable d'environnement `API_KEY`.
+- En local, elle est définie dans le fichier `.env`, exclu du dépôt par le `.gitignore`. Le fichier
+  `.env.example` indique les variables à renseigner, sans leurs valeurs.
+- En production, elle est stockée dans le secret `API_KEY` de l'environnement GitHub `production`,
+  accessible uniquement aux workflows qui déploient depuis `main`.
+- Les tests utilisent une clé fictive, définie le temps du test.
+
+Générer une clé :
+```bash
+uv run python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+**Autres mesures** :
+- Comparaison de la clé en temps constant (`secrets.compare_digest`), contre les attaques par mesure du temps de réponse.
+- Si la clé n'est pas configurée sur le serveur, l'API refuse toutes les requêtes (`500`) plutôt que de s'ouvrir.
+- Branches `main` et `develop` protégées : toute modification passe par une pull request validée par les tests.
 
 ## Tests
 *À compléter*
@@ -98,9 +148,13 @@ Les versions suivent le format `vMAJEUR.MINEUR.CORRECTIF` (ex. `v0.1.0`). Un tag
 sur `develop` ou `main`, GitHub Actions installe le projet sur une machine neuve et lance les tests
 Pytest avec un rapport de couverture.
 
-**Déploiement** (`.github/workflows/cd.yml`) : à chaque fusion sur `main`, le workflow relance les tests,
-puis, après validation manuelle dans l'environnement GitHub `production`, construit le paquet de l'API
-et publie une release versionnée (tag `vX.Y.Z` créé automatiquement).
+**Déploiement** (`.github/workflows/cd.yml`) : à chaque fusion sur `main`, le workflow :
+1. relance les tests Pytest ;
+2. attend une validation manuelle dans l'environnement GitHub `production` ;
+3. vérifie que le numéro de version est nouveau ;
+4. réalise un **test de fumée** : il démarre l'API et vérifie que `/health` répond, qu'une prédiction
+   fonctionne avec la clé de production et qu'une requête sans clé est refusée ;
+5. construit le paquet de l'API et publie une release versionnée (tag `vX.Y.Z` créé automatiquement).
 
 **Environnements et secrets** :
 | Environnement | Où | Secrets |
