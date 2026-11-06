@@ -10,3 +10,6 @@ wheels/
 .venv
 # Secrets (clé API, mot de passe de la base) : ne doit JAMAIS partir sur GitHub
 .env
+# Résultats des tests de couverture (régénérés à chaque exécution)
+.coverage
+htmlcov/
