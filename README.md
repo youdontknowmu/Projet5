@@ -66,7 +66,7 @@ uv run uvicorn projet5.api:app --reload
 Prédiction pour un employé, à partir de son identifiant :
 
 ```bash
-curl http://127.0.0.1:8000/predict/1273
+curl.exe -H "X-API-Key: <votre_clé>" http://127.0.0.1:8000/predict/1273
 ```
 
 Réponse :
@@ -82,11 +82,33 @@ Réponse :
 | Code HTTP | Signification |
 |---|---|
 | 200 | Prédiction effectuée |
+| 401 | Clé API absente ou invalide |
 | 404 | Identifiant d'employé inconnu |
 | 422 | Identifiant invalide (pas un nombre entier) |
 
 ## Authentification et sécurité
-*À compléter*
+
+**Authentification par clé API** : les routes de prédiction exigent l'en-tête HTTP `X-API-Key`.
+Sans clé, ou avec une clé invalide, l'API répond `401`. La route `/health` reste publique (supervision).
+Dans Swagger (`/docs`), le bouton **Authorize** permet de saisir la clé.
+
+**Gestion des secrets** :
+- La clé n'est jamais écrite dans le code : elle est lue dans la variable d'environnement `API_KEY`.
+- En local, elle est définie dans le fichier `.env`, exclu du dépôt par le `.gitignore`. Le fichier
+  `.env.example` indique les variables à renseigner, sans leurs valeurs.
+- En production, elle est stockée dans le secret `API_KEY` de l'environnement GitHub `production`,
+  accessible uniquement aux workflows qui déploient depuis `main`.
+- Les tests utilisent une clé fictive, définie le temps du test.
+
+Générer une clé :
+```bash
+uv run python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+**Autres mesures** :
+- Comparaison de la clé en temps constant (`secrets.compare_digest`), contre les attaques par mesure du temps de réponse.
+- Si la clé n'est pas configurée sur le serveur, l'API refuse toutes les requêtes (`500`) plutôt que de s'ouvrir.
+- Branches `main` et `develop` protégées : toute modification passe par une pull request validée par les tests.
 
 ## Tests
 *À compléter*
