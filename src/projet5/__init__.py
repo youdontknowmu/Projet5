@@ -1,2 +1,1 @@
-def main() -> None:
-    print("Hello from projet5!")
+"""Paquet projet5 : API de prédiction du risque de démission (POC Futurisys)."""

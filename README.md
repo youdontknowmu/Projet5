@@ -52,7 +52,14 @@ Projet5/
 *À compléter*
 
 ## Lancement de l'API
-*À compléter*
+
+```bash
+uv run uvicorn projet5.api:app --reload
+```
+
+- API : http://127.0.0.1:8000
+- Documentation interactive (Swagger) : http://127.0.0.1:8000/docs
+- Vérification de l'état de l'API : http://127.0.0.1:8000/health
 
 ## Utilisation
 *À compléter*
