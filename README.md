@@ -62,7 +62,28 @@ uv run uvicorn projet5.api:app --reload
 - Vérification de l'état de l'API : http://127.0.0.1:8000/health
 
 ## Utilisation
-*À compléter*
+
+Prédiction pour un employé, à partir de son identifiant :
+
+```bash
+curl http://127.0.0.1:8000/predict/1273
+```
+
+Réponse :
+```json
+{
+  "id_employee": 1273,
+  "prediction": "partant",
+  "probabilite_depart": 0.98,
+  "seuil_decision": 0.16
+}
+```
+
+| Code HTTP | Signification |
+|---|---|
+| 200 | Prédiction effectuée |
+| 404 | Identifiant d'employé inconnu |
+| 422 | Identifiant invalide (pas un nombre entier) |
 
 ## Authentification et sécurité
 *À compléter*
