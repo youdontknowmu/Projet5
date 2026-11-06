@@ -1,6 +1,6 @@
 [project]
 name = "projet5"
-version = "0.1.0"
+version = "0.2.0"
 description = "API de prédiction du risque de démission (POC Futurisys)"
 readme = "README.md"
 authors = [
