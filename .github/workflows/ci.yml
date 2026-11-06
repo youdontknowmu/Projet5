@@ -13,6 +13,8 @@ on:
     branches: [develop, main]
   # Bouton "Run workflow" dans l'onglet Actions, pour le lancer à la main
   workflow_dispatch:
+  # Permet à un autre workflow (cd.yml) d'appeler celui-ci
+  workflow_call:
 
 # CE QUE fait le workflow
 jobs:
