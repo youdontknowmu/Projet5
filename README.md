@@ -148,9 +148,13 @@ Les versions suivent le format `vMAJEUR.MINEUR.CORRECTIF` (ex. `v0.1.0`). Un tag
 sur `develop` ou `main`, GitHub Actions installe le projet sur une machine neuve et lance les tests
 Pytest avec un rapport de couverture.
 
-**Déploiement** (`.github/workflows/cd.yml`) : à chaque fusion sur `main`, le workflow relance les tests,
-puis, après validation manuelle dans l'environnement GitHub `production`, construit le paquet de l'API
-et publie une release versionnée (tag `vX.Y.Z` créé automatiquement).
+**Déploiement** (`.github/workflows/cd.yml`) : à chaque fusion sur `main`, le workflow :
+1. relance les tests Pytest ;
+2. attend une validation manuelle dans l'environnement GitHub `production` ;
+3. vérifie que le numéro de version est nouveau ;
+4. réalise un **test de fumée** : il démarre l'API et vérifie que `/health` répond, qu'une prédiction
+   fonctionne avec la clé de production et qu'une requête sans clé est refusée ;
+5. construit le paquet de l'API et publie une release versionnée (tag `vX.Y.Z` créé automatiquement).
 
 **Environnements et secrets** :
 | Environnement | Où | Secrets |
