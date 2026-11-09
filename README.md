@@ -144,7 +144,49 @@ uv run python -c "import secrets; print(secrets.token_urlsafe(32))"
 - Branches `main` et `develop` protégées : toute modification passe par une pull request validée par les tests.
 
 ## Tests
-*À compléter*
+
+29 tests Pytest, organisés en deux catégories :
+
+| Dossier | Type | Contenu |
+|---|---|---|
+| `tests/unitaires/` | Tests unitaires | Règle de décision, modèle (fidélité au projet 4, reproductibilité, performances), normalisation des noms de colonnes, lecture en base |
+| `tests/fonctionnels/` | Tests fonctionnels | API de bout en bout : prédiction, authentification, codes d'erreur, enregistrement en base |
+
+Les tests utilisent une base SQLite temporaire (`tests/conftest.py`) : ils ne modifient jamais la base
+PostgreSQL et fonctionnent sans elle.
+
+**Lancer les tests** :
+```bash
+uv run pytest -v
+```
+
+**Rapport de couverture** :
+```bash
+uv run pytest --cov=projet5 --cov-report=term-missing --cov-report=html
+```
+Le rapport détaillé est généré dans `htmlcov/index.html`. Couverture actuelle : **100 %**
+(voir [`docs/rapport_couverture.md`](docs/rapport_couverture.md)).
+
+**Dans la CI** : à chaque exécution, le tableau de couverture s'affiche sur la page du run GitHub Actions,
+et les rapports (HTML + résultats JUnit) sont téléchargeables dans l'artefact `rapports-tests`.
+
+### Points faibles identifiés et corrigés
+
+| Point faible | Correction | Test associé |
+|---|---|---|
+| Modèle du projet 4 jamais sauvegardé | Export avec joblib et vérification des probabilités | `test_probabilites_identiques_au_projet_4` |
+| Noms de colonnes incompatibles avec SQL (accents, espaces) | Normalisation automatique, dans les deux sens | `test_noms_sql_tous_differents`, `test_lecture_employe_valeurs_identiques_au_csv` |
+| Tests dépendants de la vraie base | Base SQLite temporaire dédiée aux tests | Ensemble des tests fonctionnels |
+| API ouverte si la clé n'est pas configurée | Refus de toutes les requêtes (500) | `test_prediction_refusee_si_cle_non_configuree` |
+| Feature manquante | Le modèle refuse de prédire plutôt que de renvoyer un résultat faux | `test_colonne_manquante_leve_une_erreur` |
+| Connexions à la base de test non refermées (`ResourceWarning`) | Fermeture explicite en fin de session de tests | Ensemble des tests |
+
+### Limites connues
+- Le contrôle de performance porte sur le dataset complet, qui inclut les données d'entraînement : il sert
+  de garde-fou contre un modèle dégradé, pas de mesure de performance (voir le projet 4 pour celle-ci).
+- Les tests tournent sur SQLite. Le comportement avec PostgreSQL est vérifié par le test de fumée du
+  déploiement, qui utilise une vraie base PostgreSQL.
+- Pas de test de charge : non requis pour ce POC.
 
 ## CI/CD et gestion des versions
 
