@@ -13,3 +13,4 @@ wheels/
 # Résultats des tests de couverture (régénérés à chaque exécution)
 .coverage
 htmlcov/
+rapport-tests.xml

@@ -30,4 +30,10 @@ def base_de_test():
     donnees = pd.read_csv(CHEMIN_DONNEES).rename(columns=nom_colonne_sql)
     donnees.to_sql("employes", moteur, if_exists="append", index=False)
     yield
-    moteur.dispose()   # ferme les connexions à la fin des tests
+
+    # Fin des tests : on ferme proprement TOUTES les connexions ouvertes vers la base de test
+    # (celle créée ici et celle de l'API), sinon Python signale des "ResourceWarning"
+    from projet5.api import moteur as moteur_api
+
+    moteur_api.dispose()
+    moteur.dispose()
