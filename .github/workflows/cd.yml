@@ -23,7 +23,28 @@ jobs:
     environment: production       # donne accès aux secrets de production + validation manuelle
     permissions:
       contents: write             # autorise le workflow à créer une release
+    
+    # Base PostgreSQL TEMPORAIRE, créée pour ce job puis détruite à la fin.
+    # Elle permet au test de fumée de démarrer l'API dans des conditions réelles.
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: projet5
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          POSTGRES_DB: projet5
+        ports:
+          - 5432:5432
+        # Attend que PostgreSQL soit prêt avant de lancer les étapes
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
 
+    # Variables disponibles pour toutes les étapes du job
+    env:
+      DATABASE_URL: postgresql+psycopg://projet5:${{ secrets.DB_PASSWORD }}@localhost:5432/projet5
     steps:
       - name: Récupération du code
         uses: actions/checkout@v5
@@ -62,6 +83,10 @@ jobs:
       # Installe l'API et ses dépendances sur la machine de GitHub
       - name: Installation des dépendances
         run: uv sync --frozen
+
+      # Crée les tables et insère le dataset dans la base temporaire
+      - name: Création de la base de données
+        run: uv run python scripts/create_db.py
 
       # Test de fumée : on démarre VRAIMENT l'API et on l'interroge, avec la clé de production
       - name: Test de fumée de l'API
