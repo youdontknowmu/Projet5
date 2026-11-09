@@ -73,8 +73,17 @@ par exemple `statut_marital_Divorcé(e)` → `statut_marital_divorce_e`. Seuls l
    ```
    ⚠️ Le script recrée les tables à chaque exécution : l'historique des prédictions est effacé.
 
+**Traçabilité** : chaque appel réussi à `/predict` enregistre l'entrée (employé concerné) et les sorties
+du modèle (probabilité, prédiction, seuil, version de l'API) dans la table `predictions`. Les requêtes
+en erreur (employé inconnu, clé invalide) ne sont pas enregistrées.
+
+**Tests** : les tests utilisent une base SQLite temporaire, créée automatiquement (`tests/conftest.py`).
+Ils ne modifient jamais la base PostgreSQL et fonctionnent sans elle, notamment dans la CI.
+En production, le test de fumée utilise une base PostgreSQL temporaire fournie par GitHub Actions.
+
 ## Lancement de l'API
 
+Prérequis : PostgreSQL démarré, `.env` renseigné et base créée (voir « Base de données »).
 ```bash
 uv run uvicorn projet5.api:app --reload
 ```
