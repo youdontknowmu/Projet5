@@ -3,6 +3,7 @@ import os
 import re
 import unicodedata
 
+import pandas as pd
 from dotenv import load_dotenv
 from sqlalchemy import (
     CheckConstraint,
@@ -16,6 +17,8 @@ from sqlalchemy import (
     Table,
     create_engine,
     func,
+    insert,
+    select,
 )
 
 from projet5.modele import charger_modele
@@ -39,6 +42,10 @@ def nom_colonne_sql(nom: str) -> str:
 
 # Les 40 features, dans l'ordre attendu par le modèle : la table est construite à partir de cette liste
 FEATURES_MODELE = list(charger_modele().feature_names_in_)
+
+# Correspondance "nom en base" -> "nom attendu par le modèle"
+# Exemple : "statut_marital_divorce_e" -> "statut_marital_Divorcé(e)"
+NOMS_MODELE = {nom_colonne_sql(feature): feature for feature in FEATURES_MODELE}
 
 # Seule colonne décimale du dataset (toutes les autres sont des nombres entiers)
 COLONNES_DECIMALES = {"taux_mobilite"}
@@ -87,3 +94,36 @@ table_predictions = Table(
 def creer_moteur():
     """Crée la connexion à la base, à partir de DATABASE_URL (fichier .env ou variable d'environnement)."""
     return create_engine(os.environ["DATABASE_URL"])
+
+
+def lire_employe(connexion, id_employee: int):
+    """Cherche un employé en base à partir de son identifiant métier.
+
+    Renvoie (clé technique, features au format du modèle), ou None si l'employé n'existe pas.
+    """
+    # SELECT id, <40 features> FROM employes WHERE id_employee = ...
+    colonnes = [table_employes.c.id] + [table_employes.c[nom_sql] for nom_sql in NOMS_MODELE]
+    requete = select(*colonnes).where(table_employes.c.id_employee == id_employee)
+    ligne = connexion.execute(requete).mappings().first()
+
+    if ligne is None:
+        return None
+
+    # On redonne aux colonnes leur nom d'origine, dans l'ordre exact attendu par le modèle
+    features = pd.DataFrame([{NOMS_MODELE[nom_sql]: ligne[nom_sql] for nom_sql in NOMS_MODELE}])
+    return ligne["id"], features[FEATURES_MODELE]
+
+
+def enregistrer_prediction(connexion, employe_id: int, probabilite: float, prediction: str,
+                           seuil: float, version_api: str) -> None:
+    """Enregistre une prédiction dans la table predictions (entrée + sorties du modèle)."""
+    # INSERT INTO predictions (...) VALUES (...) ; la date est remplie par PostgreSQL
+    connexion.execute(
+        insert(table_predictions).values(
+            employe_id=employe_id,
+            probabilite_depart=probabilite,
+            prediction=prediction,
+            seuil_decision=seuil,
+            version_api=version_api,
+        )
+    )

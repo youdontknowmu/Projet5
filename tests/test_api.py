@@ -1,8 +1,10 @@
 """Tests fonctionnels de l'API : on l'appelle comme le ferait un utilisateur."""
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import func, select
 
-from projet5.api import app
+from projet5.api import app, moteur
+from projet5.base_de_donnees import table_predictions
 
 # TestClient simule des appels à l'API sans démarrer de vrai serveur
 client = TestClient(app)
@@ -63,7 +65,36 @@ def test_prediction_identifiant_non_entier_renvoie_422():
 
     assert reponse.status_code == 422            # 422 = données de la requête invalides
 
+def compter_predictions() -> int:
+    """Compte les lignes de la table predictions (base de test)."""
+    with moteur.connect() as connexion:
+        return connexion.execute(select(func.count()).select_from(table_predictions)).scalar()
 
+
+def test_prediction_enregistree_en_base():
+    # Chaque prédiction réussie doit ajouter UNE ligne dans la table predictions
+    avant = compter_predictions()
+    reponse = client.get("/predict/1273", headers=ENTETES_VALIDES)
+
+    assert reponse.status_code == 200
+    assert compter_predictions() == avant + 1
+
+    # La dernière ligne enregistrée contient bien les sorties renvoyées par l'API
+    with moteur.connect() as connexion:
+        derniere = connexion.execute(
+            select(table_predictions).order_by(table_predictions.c.id.desc())
+        ).mappings().first()
+    assert derniere["prediction"] == "partant"
+    assert derniere["probabilite_depart"] == reponse.json()["probabilite_depart"]
+
+
+def test_employe_inconnu_non_enregistre():
+    # Une requête en erreur ne doit rien écrire en base
+    avant = compter_predictions()
+    client.get("/predict/999999", headers=ENTETES_VALIDES)
+
+    assert compter_predictions() == avant
+    
 # ---------- Route /predict/{id_employee} : authentification ----------
 
 def test_prediction_sans_cle_renvoie_401():
