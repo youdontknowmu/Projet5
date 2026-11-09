@@ -49,7 +49,29 @@ Projet5/
 > `uv export --format requirements-txt --no-hashes --no-emit-project -o requirements.txt`
 
 ## Base de données
-*À compléter*
+
+PostgreSQL, piloté depuis Python avec SQLAlchemy. Deux tables :
+
+| Table | Contenu |
+|---|---|
+| `employes` | Dataset du projet 4 (1 470 employés) : clé technique `id`, identifiant métier `id_employee`, 40 features, réponse réelle `a_quitte_l_entreprise` |
+| `predictions` | Une ligne par prédiction : employé concerné (clé étrangère), date, probabilité, prédiction, seuil, version de l'API |
+
+Les noms de colonnes du modèle sont normalisés pour SQL (minuscules, sans accents ni caractères spéciaux),
+par exemple `statut_marital_Divorcé(e)` → `statut_marital_divorce_e`. Seuls les noms changent, pas les valeurs.
+
+**Création de la base** :
+1. Dans PostgreSQL, créer un utilisateur et une base dédiés :
+   ```sql
+   CREATE ROLE projet5 WITH LOGIN PASSWORD '<mot_de_passe>';
+   CREATE DATABASE projet5 OWNER projet5;
+   ```
+2. Renseigner `DATABASE_URL` dans le fichier `.env`.
+3. Créer les tables et insérer le dataset :
+   ```bash
+   uv run python scripts/create_db.py
+   ```
+   ⚠️ Le script recrée les tables à chaque exécution : l'historique des prédictions est effacé.
 
 ## Lancement de l'API
 
