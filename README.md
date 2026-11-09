@@ -81,6 +81,8 @@ en erreur (employé inconnu, clé invalide) ne sont pas enregistrées.
 Ils ne modifient jamais la base PostgreSQL et fonctionnent sans elle, notamment dans la CI.
 En production, le test de fumée utilise une base PostgreSQL temporaire fournie par GitHub Actions.
 
+Documentation détaillée du schéma (tables, contraintes, clés) : [`docs/base_de_donnees.md`](docs/base_de_donnees.md).
+
 ## Lancement de l'API
 
 Prérequis : PostgreSQL démarré, `.env` renseigné et base créée (voir « Base de données »).
@@ -195,7 +197,20 @@ Pytest avec un rapport de couverture.
 | Production | Environnement GitHub `production`, branche `main` uniquement | Secret `API_KEY` (environnement GitHub) |
 
 ## Besoins analytiques
-*À compléter*
+
+La table `predictions` historise chaque utilisation du modèle. Croisée avec la table `employes`,
+elle permet d'alimenter un tableau de bord de suivi. Les requêtes correspondantes sont dans
+[`scripts/requetes_analyse.sql`](scripts/requetes_analyse.sql).
+
+| Indicateur | Utilité |
+|---|---|
+| Nombre de prédictions et part de « partant » | Suivre l'usage de l'API et le volume d'alertes transmises aux RH |
+| Activité par jour et par version de l'API | Suivre l'adoption et vérifier l'effet de chaque mise en production |
+| Employés les plus à risque (dernière prédiction) | Prioriser les entretiens RH, en commençant par les probabilités les plus élevées |
+| Prédictions comparées à la réalité connue | Surveiller la qualité du modèle dans le temps et détecter une dérive |
+| Risque moyen selon les heures supplémentaires | Suivre l'un des principaux facteurs de départ identifiés au projet 4 |
+
+Exemples de prédictions stockées : [`docs/exemples_predictions.csv`](docs/exemples_predictions.csv).
 
 ## Auteur
 Antoine Driot
