@@ -37,6 +37,27 @@ jobs:
       - name: Installation des dépendances
         run: uv sync --frozen
 
-      # 4) Lance les tests, avec le rapport de couverture
+      # 4) Lance les tests et produit les rapports :
+      #    --cov-report=html     : rapport de couverture détaillé (dossier htmlcov/)
+      #    --junitxml            : rapport des résultats de chaque test (format standard JUnit)
       - name: Lancement des tests
-        run: uv run pytest -v --cov=projet5 --cov-report=term-missing
+        run: >-
+          uv run pytest -v
+          --cov=projet5 --cov-report=term-missing --cov-report=html
+          --junitxml=rapport-tests.xml
+
+      # 5) Tableau de couverture affiché directement sur la page du run
+      #    (if: always() : même si un test a échoué, pour voir où en est la couverture)
+      - name: Résumé de la couverture
+        if: always()
+        run: uv run coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"
+
+      # 6) Rapports téléchargeables depuis la page du run (rubrique "Artifacts")
+      - name: Publication des rapports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapports-tests
+          path: |
+            htmlcov/
+            rapport-tests.xml
