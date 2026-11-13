@@ -38,6 +38,20 @@ def test_route_inconnue_renvoie_404():
     assert reponse.status_code == 404
 
 
+# ---------- Documentation intégrée (Swagger / OpenAPI) ----------
+
+def test_documentation_swagger_accessible():
+    # La page de documentation interactive est servie par l'API
+    assert client.get("/docs").status_code == 200
+
+
+def test_documentation_decrit_les_erreurs_de_prediction():
+    # Le schéma OpenAPI (utilisé par Swagger) décrit les réponses possibles de la route de prédiction
+    schema = client.get("/openapi.json").json()
+    reponses = schema["paths"]["/predict/{id_employee}"]["get"]["responses"]
+    assert {"200", "401", "404", "422"} <= set(reponses)
+
+    
 # ---------- Route /predict/{id_employee} : prédiction ----------
 
 def test_prediction_employe_a_risque():
