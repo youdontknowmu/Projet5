@@ -145,11 +145,11 @@ uv run python -c "import secrets; print(secrets.token_urlsafe(32))"
 
 ## Tests
 
-29 tests Pytest, organisés en deux catégories :
+39 tests Pytest, organisés en deux catégories :
 
 | Dossier | Type | Contenu |
 |---|---|---|
-| `tests/unitaires/` | Tests unitaires | Règle de décision, modèle (fidélité au projet 4, reproductibilité, performances), normalisation des noms de colonnes, lecture en base |
+| `tests/unitaires/` | Tests unitaires | Règle de décision, modèle (fidélité au projet 4, reproductibilité, performances), normalisation des noms de colonnes, lecture en base, intégrité de la base (typage, contraintes, insertion, suppression) | 
 | `tests/fonctionnels/` | Tests fonctionnels | API de bout en bout : prédiction, authentification, codes d'erreur, enregistrement en base |
 
 Les tests utilisent une base SQLite temporaire (`tests/conftest.py`) : ils ne modifient jamais la base
@@ -180,6 +180,7 @@ et les rapports (HTML + résultats JUnit) sont téléchargeables dans l'artefact
 | API ouverte si la clé n'est pas configurée | Refus de toutes les requêtes (500) | `test_prediction_refusee_si_cle_non_configuree` |
 | Feature manquante | Le modèle refuse de prédire plutôt que de renvoyer un résultat faux | `test_colonne_manquante_leve_une_erreur` |
 | Connexions à la base de test non refermées (`ResourceWarning`) | Fermeture explicite en fin de session de tests | Ensemble des tests |
+| SQLite (tests) n'applique pas les clés étrangères, contrairement à PostgreSQL | Activation explicite (`PRAGMA foreign_keys=ON`) dans `tests/conftest.py` | `test_prediction_pour_employe_inexistant_refusee`, `test_suppression_employe_avec_predictions_refusee` |
 
 ### Limites connues
 - Le contrôle de performance porte sur le dataset complet, qui inclut les données d'entraînement : il sert
@@ -187,6 +188,9 @@ et les rapports (HTML + résultats JUnit) sont téléchargeables dans l'artefact
 - Les tests tournent sur SQLite. Le comportement avec PostgreSQL est vérifié par le test de fumée du
   déploiement, qui utilise une vraie base PostgreSQL.
 - Pas de test de charge : non requis pour ce POC.
+- Les tests s'exécutent sur un jeu de données fixe (reproductibilité). En production, avec une table alimentée
+  régulièrement par le SIRH, il faudrait ajouter des contrôles de qualité à chaque chargement
+  (volumétrie cohérente avec la source, doublons, valeurs manquantes, plages de valeurs).
 
 ## CI/CD et gestion des versions
 
