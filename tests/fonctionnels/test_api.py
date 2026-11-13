@@ -102,6 +102,7 @@ def test_prediction_enregistree_en_base():
     assert derniere["prediction"] == "partant"
     assert derniere["probabilite_depart"] == reponse.json()["probabilite_depart"]
 
+
 def test_employe_inconnu_non_enregistre():
     # Une requête en erreur ne doit rien écrire en base
     avant = compter_predictions()
