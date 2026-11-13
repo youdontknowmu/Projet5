@@ -6,7 +6,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from projet5.base_de_donnees import creer_moteur, enregistrer_prediction, lire_employe
 from projet5.modele import calculer_probabilite, charger_modele
 from projet5.prediction import SEUIL_DECISION, interpreter_probabilite
-from projet5.schemas import Prediction, Sante
+from projet5.schemas import Erreur, Prediction, Sante
 from projet5.securite import verifier_cle_api
 
 # Numéro de version lu dans pyproject.toml : il n'est écrit qu'à un seul endroit
@@ -14,9 +14,19 @@ VERSION_API = version("projet5")
 
 # Création de l'application.
 # Le titre, la description et la version s'affichent dans la documentation Swagger (/docs).
+# La description accepte le format Markdown : elle s'affiche en haut de la page Swagger.
+DESCRIPTION = """
+Prédit si un employé risque de quitter l'entreprise, à partir du modèle entraîné au projet 4.
+
+**Authentification** : les routes de prédiction exigent une clé API dans l'en-tête `X-API-Key`
+(bouton **Authorize** ci-dessous).
+
+**Traçabilité** : chaque prédiction réussie est enregistrée dans la base PostgreSQL (table `predictions`).
+"""
+
 app = FastAPI(
     title="API Futurisys - Risque de démission",
-    description="Prédit si un employé risque de quitter l'entreprise, à partir du modèle entraîné au projet 4.",
+    description=DESCRIPTION,
     version=VERSION_API,
 )
 
@@ -38,7 +48,7 @@ def obtenir_connexion():
 # @app.get("/health") : quand quelqu'un appelle l'adresse /health (méthode GET),
 # FastAPI exécute la fonction juste en dessous et renvoie son résultat en JSON.
 # response_model : le schéma de la réponse (vérification + documentation Swagger).
-@app.get("/health", response_model=Sante, tags=["Supervision"])
+@app.get("/health", response_model=Sante, tags=["Supervision"], summary="Vérifier que l'API répond")
 def verifier_sante() -> Sante:
     """Indique que l'API est démarrée et répond."""
     return Sante(statut="ok")
@@ -54,6 +64,14 @@ def verifier_sante() -> Sante:
     response_model=Prediction,
     tags=["Prédiction"],
     dependencies=[Depends(verifier_cle_api)],
+    summary="Prédire le risque de départ d'un employé",
+    # Erreurs possibles, affichées dans Swagger avec leur format et un exemple
+    # (l'erreur 422 de validation est documentée automatiquement par FastAPI)
+    responses={
+        401: {"model": Erreur, "description": "Clé API absente ou invalide"},
+        404: {"model": Erreur, "description": "Aucun employé avec cet identifiant"},
+        500: {"model": Erreur, "description": "Clé API non configurée sur le serveur"},
+    },
 )
 def predire(id_employee: int, connexion=Depends(obtenir_connexion)) -> Prediction:
     """Prédit si l'employé risque de quitter l'entreprise, et enregistre la prédiction en base."""
