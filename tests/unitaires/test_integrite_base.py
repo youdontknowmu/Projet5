@@ -69,6 +69,16 @@ def test_types_des_colonnes(connexion):
         assert isinstance(types_en_base[nom_colonne_sql(feature)], type_attendu), feature
 
 
+def test_index_de_la_table_predictions(connexion):
+    # Volume : la table predictions grossit à chaque appel, ses colonnes de recherche doivent être indexées
+    colonnes_indexees = {
+        colonne
+        for index in inspect(connexion).get_indexes("predictions")
+        for colonne in index["column_names"]
+    }
+    assert {"employe_id", "date_prediction"} <= colonnes_indexees
+
+    
 # ---------- Contraintes : la base refuse les données invalides ----------
 
 def test_prediction_hors_valeurs_autorisees_refusee(connexion):
