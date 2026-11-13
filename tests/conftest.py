@@ -14,13 +14,26 @@ from pathlib import Path
 DOSSIER_TEMPORAIRE = Path(tempfile.mkdtemp())
 os.environ["DATABASE_URL"] = f"sqlite:///{DOSSIER_TEMPORAIRE / 'tests.db'}"
 
+import sqlite3  # noqa: E402
+
 import pandas as pd  # noqa: E402
 import pytest  # noqa: E402
+from sqlalchemy import event  # noqa: E402
+from sqlalchemy.engine import Engine  # noqa: E402
 
 from projet5.base_de_donnees import creer_moteur, metadata, nom_colonne_sql  # noqa: E402
 from projet5.modele import CHEMIN_DONNEES  # noqa: E402
 
-
+# SQLite n'applique PAS les clés étrangères par défaut (contrairement à PostgreSQL).
+# Cette fonction est appelée à chaque nouvelle connexion et les active,
+# pour que les tests vérifient bien les mêmes règles qu'en production.
+@event.listens_for(Engine, "connect")
+def activer_cles_etrangeres_sqlite(connexion_dbapi, _):
+    if isinstance(connexion_dbapi, sqlite3.Connection):
+        curseur = connexion_dbapi.cursor()
+        curseur.execute("PRAGMA foreign_keys=ON")
+        curseur.close()
+        
 # scope="session" : exécuté UNE seule fois pour toute la session de tests
 @pytest.fixture(scope="session", autouse=True)
 def base_de_test():
@@ -30,4 +43,10 @@ def base_de_test():
     donnees = pd.read_csv(CHEMIN_DONNEES).rename(columns=nom_colonne_sql)
     donnees.to_sql("employes", moteur, if_exists="append", index=False)
     yield
-    moteur.dispose()   # ferme les connexions à la fin des tests
+
+    # Fin des tests : on ferme proprement TOUTES les connexions ouvertes vers la base de test
+    # (celle créée ici et celle de l'API), sinon Python signale des "ResourceWarning"
+    from projet5.api import moteur as moteur_api
+
+    moteur_api.dispose()
+    moteur.dispose()

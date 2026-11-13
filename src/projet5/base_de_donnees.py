@@ -76,9 +76,11 @@ table_predictions = Table(
     metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
     # Entrée du modèle : l'employé concerné (lien vers la table employes)
-    Column("employe_id", Integer, ForeignKey("employes.id"), nullable=False),
+    # index=True : accélère la recherche de l'historique d'un employé et les jointures avec employes
+    Column("employe_id", Integer, ForeignKey("employes.id"), nullable=False, index=True),
     # Date et heure de la prédiction, remplies automatiquement par PostgreSQL
-    Column("date_prediction", DateTime(timezone=True), server_default=func.now(), nullable=False),
+    # index=True : accélère les analyses par période (la table grossit à chaque appel de l'API)
+    Column("date_prediction", DateTime(timezone=True), server_default=func.now(), nullable=False, index=True),
     # Sorties du modèle
     Column("probabilite_depart", Float, nullable=False),
     Column("prediction", String(10), nullable=False),
