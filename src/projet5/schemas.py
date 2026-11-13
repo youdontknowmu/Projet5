@@ -30,3 +30,9 @@ class Prediction(BaseModel):
     seuil_decision: float = Field(
         description="Seuil au-delà duquel l'employé est considéré comme partant", examples=[0.16]
     )
+
+
+class Erreur(BaseModel):
+    """Réponse renvoyée en cas d'erreur (format standard de FastAPI)."""
+
+    detail: str = Field(description="Message expliquant l'erreur", examples=["Employé 999999 introuvable"])
