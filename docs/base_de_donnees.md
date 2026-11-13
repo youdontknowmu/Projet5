@@ -67,6 +67,25 @@ Une ligne par appel réussi à `/predict/{id_employee}`.
 
 Les requêtes en erreur (employé inconnu, clé invalide) ne sont pas enregistrées.
 
+## Volume et performances
+
+La table `employes` est fixe (une ligne par employé). La table `predictions` grossit à chaque appel de
+l'API : sa structure est pensée pour rester efficace avec le volume.
+
+| Index | Créé par | Utilité |
+|---|---|---|
+| `employes_pkey` (`id`) | Clé primaire (automatique) | Jointures avec `predictions` |
+| `employes_id_employee_key` (`id_employee`) | Contrainte d'unicité (automatique) | Recherche de l'employé à chaque appel de l'API |
+| `predictions_pkey` (`id`) | Clé primaire (automatique) | Accès direct à une prédiction |
+| `ix_predictions_employe_id` | `index=True` | Historique d'un employé, jointures (PostgreSQL n'indexe pas automatiquement les clés étrangères) |
+| `ix_predictions_date_prediction` | `index=True` | Analyses par période (activité par jour, dernières prédictions) |
+
+Autres choix favorables au volume : types compacts (entiers pour les features et les clés), aucune
+donnée dupliquée (les features ne sont stockées qu'une fois, dans `employes`).
+
+Pistes pour de très gros volumes : partitionnement de `predictions` par mois, purge ou archivage des
+prédictions anciennes selon une durée de conservation définie (exigence RGPD).
+
 ## Clé technique et identifiant métier
 
 Chaque table possède sa propre **clé technique** `id`, distincte de l'**identifiant métier**
