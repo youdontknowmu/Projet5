@@ -51,7 +51,7 @@ def test_documentation_decrit_les_erreurs_de_prediction():
     reponses = schema["paths"]["/predict/{id_employee}"]["get"]["responses"]
     assert {"200", "401", "404", "422"} <= set(reponses)
 
-    
+
 # ---------- Route /predict/{id_employee} : prédiction ----------
 
 def test_prediction_employe_a_risque():
@@ -78,6 +78,7 @@ def test_prediction_identifiant_non_entier_renvoie_422():
     reponse = client.get("/predict/abc", headers=ENTETES_VALIDES)
 
     assert reponse.status_code == 422            # 422 = données de la requête invalides
+
 
 def compter_predictions() -> int:
     """Compte les lignes de la table predictions (base de test)."""
@@ -108,7 +109,8 @@ def test_employe_inconnu_non_enregistre():
     client.get("/predict/999999", headers=ENTETES_VALIDES)
 
     assert compter_predictions() == avant
-    
+
+
 # ---------- Route /predict/{id_employee} : authentification ----------
 
 def test_prediction_sans_cle_renvoie_401():
